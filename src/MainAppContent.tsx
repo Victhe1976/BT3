@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { onAuthStateChanged, User, signInWithCustomToken, signInAnonymously } from "firebase/auth";
 import { auth } from './firebase/firebaseClient'; 
+import AuthForm from './AuthForm'; // Importa o componente de Login/Cadastro
 
 declare const __app_id: string;
 declare const __initial_auth_token: string;
@@ -8,6 +9,9 @@ declare const __initial_auth_token: string;
 export default function MainAppContent() {
     const [user, setUser] = useState<User | null>(null);
     const [loading, setLoading] = useState(true);
+
+    // Variáveis lidas do ambiente do Vite
+    const appId = import.meta.env.VITE_APP_ID || 'default-app-id';
 
     useEffect(() => {
         const authInstance = auth; // Captura a instância (Auth | null)
@@ -20,18 +24,17 @@ export default function MainAppContent() {
         async function handleAuth() {
             try {
                 if (typeof __initial_auth_token !== 'undefined' && __initial_auth_token) {
-                    // USO DO OPERADOR ! (Asserção de Não-Nulidade)
-                    await signInWithCustomToken(auth!, __initial_auth_token); 
+                    // Usa authInstance (corrigido para TS2345)
+                    await signInWithCustomToken(authInstance, __initial_auth_token); 
                 } else {
-                    // USO DO OPERADOR !
-                    await signInAnonymously(auth!); 
+                    // Usa authInstance (corrigido para TS2345)
+                    await signInAnonymously(authInstance); 
                 }
             } catch (error) {
                 console.error("Erro na autenticação inicial:", error);
             }
         }
         
-        // Chamamos handleAuth para acionar o login/anonimização
         handleAuth(); 
 
         const unsubscribe = onAuthStateChanged(authInstance, (currentUser) => {
@@ -50,7 +53,6 @@ export default function MainAppContent() {
         );
     }
     
-    // Checagem de falha de inicialização (tela vermelha)
     if (!auth) { 
         return (
             <div className="flex h-screen items-center justify-center bg-red-100 text-red-700 p-8">
@@ -61,14 +63,14 @@ export default function MainAppContent() {
         );
     }
     
-    const appId = import.meta.env.VITE_APP_ID || 'default-app-id';
     const userId = user?.uid || 'Desconectado';
     const displayEmail = user?.email || (user?.isAnonymous ? 'Anônimo' : 'Convidado'); 
 
     return (
         <div className="p-4 bg-gray-50 min-h-screen">
-          <div className="max-w-4xl mx-auto bg-white p-6 rounded-xl shadow-lg">
+          <div className="max-w-md mx-auto bg-white p-6 rounded-xl shadow-lg mt-10">
             {user ? (
+              // Se o usuário está logado, mostra o painel
               <div>
                 <h1 className="text-2xl font-bold mb-2 text-green-600">
                   Bem-vindo, {displayEmail}
@@ -79,9 +81,11 @@ export default function MainAppContent() {
                 <p className="mt-4 text-gray-700">O conteúdo principal do seu aplicativo irá aqui.</p>
               </div>
             ) : (
-              <div>
-                <h1 className="text-2xl font-bold text-red-600">Você não está logado</h1>
-                <p className="mt-2 text-gray-600">Por favor, faça login para acessar o conteúdo.</p>
+              // Se o usuário não está logado, mostra o formulário de autenticação
+              <div className="text-center">
+                <h1 className="text-2xl font-bold text-red-600 mb-4">Você não está logado</h1>
+                <p className="mt-2 text-gray-600 mb-8">Por favor, faça login para acessar o conteúdo.</p>
+                <AuthForm /> 
               </div>
             )}
           </div>
