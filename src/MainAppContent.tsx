@@ -22,7 +22,7 @@ export default function MainAppContent() {
     const appId = import.meta.env.VITE_APP_ID || 'default-app-id';
 
     useEffect(() => {
-        const authInstance = auth; // Captura a instância (Auth | null)
+        const authInstance = auth; 
 
         if (!authInstance) {
             setLoading(false);
@@ -31,12 +31,11 @@ export default function MainAppContent() {
 
         async function handleAuth() {
             try {
-                if (initialAuthToken) {
-                    // FINAL FIX: Use non-null assertion (!) on authInstance for strict Firebase functions
-                    await signInWithCustomToken(authInstance!, initialAuthToken); 
+                // 💡 CORREÇÃO: Verifica se o token existe E se a string não está vazia.
+                if (initialAuthToken && initialAuthToken.length > 0) {
+                    await signInWithCustomToken(authInstance, initialAuthToken); 
                 } else {
-                    // FINAL FIX: Use non-null assertion (!)
-                    await signInAnonymously(authInstance!); 
+                    await signInAnonymously(authInstance); 
                 }
             } catch (error) {
                 console.error("Erro na autenticação inicial:", error);
@@ -68,6 +67,7 @@ export default function MainAppContent() {
         );
     }
     
+    // Mostra erro crítico de inicialização do Firebase (se auth for nulo)
     if (!auth || playersError || matchesError) { 
         return (
             <div className="flex h-screen items-center justify-center bg-red-100 text-red-700 p-8">
