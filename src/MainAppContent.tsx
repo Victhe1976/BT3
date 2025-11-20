@@ -17,19 +17,21 @@ export default function MainAppContent() {
             return;
         }
 
-        // Simplificação: handleAuth não recebe argumentos e usa a variável local authInstance.
         async function handleAuth() {
             try {
                 if (typeof __initial_auth_token !== 'undefined' && __initial_auth_token) {
-                    await signInWithCustomToken(authInstance, __initial_auth_token); 
+                    // USO DO OPERADOR ! (Asserção de Não-Nulidade)
+                    await signInWithCustomToken(auth!, __initial_auth_token); 
                 } else {
-                    await signInAnonymously(authInstance); 
+                    // USO DO OPERADOR !
+                    await signInAnonymously(auth!); 
                 }
             } catch (error) {
                 console.error("Erro na autenticação inicial:", error);
             }
         }
         
+        // Chamamos handleAuth para acionar o login/anonimização
         handleAuth(); 
 
         const unsubscribe = onAuthStateChanged(authInstance, (currentUser) => {
@@ -48,7 +50,7 @@ export default function MainAppContent() {
         );
     }
     
-    // Este código deve ser executado no navegador após o build.
+    // Checagem de falha de inicialização (tela vermelha)
     if (!auth) { 
         return (
             <div className="flex h-screen items-center justify-center bg-red-100 text-red-700 p-8">
