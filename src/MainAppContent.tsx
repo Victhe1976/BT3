@@ -10,22 +10,22 @@ export default function MainAppContent() {
     const [loading, setLoading] = useState(true);
 
     useEffect(() => {
-        const authInstance = auth; // Captura a instância (Auth | null)
+        // Capturamos authInstance localmente para uso no listener
+        const authInstance = auth; 
 
         if (!authInstance) {
             setLoading(false);
             return;
         }
 
-        // A função interna agora usa a variável local authInstance
         async function handleAuth() {
             try {
                 if (typeof __initial_auth_token !== 'undefined' && __initial_auth_token) {
-                    // CORREÇÃO: Uso de authInstance (garantido não nulo)
-                    await signInWithCustomToken(authInstance, __initial_auth_token); 
+                    // USO DA ASSERÇÃO 'auth!': Resolve o erro TS2345
+                    await signInWithCustomToken(auth!, __initial_auth_token); 
                 } else {
-                    // CORREÇÃO: Uso de authInstance (garantido não nulo)
-                    await signInAnonymously(authInstance); 
+                    // USO DA ASSERÇÃO 'auth!': Resolve o erro TS2345
+                    await signInAnonymously(auth!); 
                 }
             } catch (error) {
                 console.error("Erro na autenticação inicial:", error);
@@ -50,6 +50,7 @@ export default function MainAppContent() {
         );
     }
     
+    // Check for Firebase initialization failure
     if (!auth) { 
         return (
             <div className="flex h-screen items-center justify-center bg-red-100 text-red-700 p-8">
