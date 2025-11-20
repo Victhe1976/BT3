@@ -10,19 +10,22 @@ export default function MainAppContent() {
     const [user, setUser] = useState<User | null>(null);
     const [loading, setLoading] = useState(true);
 
+    // --- Integração Firestore Data Hooks ---
+    // Assumindo que os nomes das coleções são 'players' e 'matches'
     const { data: playersData, loading: playersLoading, error: playersError } = useFirestoreData<Player>('players');
     const { data: matchesData, loading: matchesLoading, error: matchesError } = useFirestoreData<Match>('matches');
 
     const players = useMemo(() => playersData || [], [playersData]);
     const matches = useMemo(() => matchesData || [], [matchesData]);
     const isDataLoading = playersLoading || matchesLoading;
+    // ----------------------------------------
 
 
     const initialAuthToken = import.meta.env.VITE_INITIAL_AUTH_TOKEN;
     const appId = import.meta.env.VITE_APP_ID || 'default-app-id';
 
     useEffect(() => {
-        const authInstance = auth; // Captura a instância (Auth | null)
+        const authInstance = auth; 
 
         if (!authInstance) {
             setLoading(false);
@@ -32,10 +35,8 @@ export default function MainAppContent() {
         async function handleAuth() {
             try {
                 if (initialAuthToken) {
-                    // CORREÇÃO TS2345: Uso de authInstance (garantido não nulo)
                     await signInWithCustomToken(authInstance, initialAuthToken); 
                 } else {
-                    // CORREÇÃO TS2345: Uso de authInstance (garantido não nulo)
                     await signInAnonymously(authInstance); 
                 }
             } catch (error) {
@@ -53,6 +54,7 @@ export default function MainAppContent() {
         return () => unsubscribe();
     }, [initialAuthToken]);
 
+    // Função de Logout (Corrigida)
     const handleLogout = () => {
         if (auth) {
             signOut(auth).catch(err => console.error("Erro ao fazer logout:", err));
@@ -96,6 +98,7 @@ export default function MainAppContent() {
                         <span className="text-sm text-gray-600 hidden sm:inline">
                             Logado como: **{displayEmail}**
                         </span>
+                        {/* BOTÃO DE LOGOUT */}
                         <button 
                             onClick={handleLogout}
                             className="bg-red-500 hover:bg-red-600 text-white py-1 px-4 rounded-lg text-sm font-semibold transition"
