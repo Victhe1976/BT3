@@ -10,8 +10,8 @@ export default function MainAppContent() {
     const [user, setUser] = useState<User | null>(null);
     const [loading, setLoading] = useState(true);
 
-    // Variáveis lidas do ambiente do Vite
     const appId = import.meta.env.VITE_APP_ID || 'default-app-id';
+    const initialAuthToken = import.meta.env.VITE_INITIAL_AUTH_TOKEN;
 
     useEffect(() => {
         const authInstance = auth; // Captura a instância (Auth | null)
@@ -23,11 +23,11 @@ export default function MainAppContent() {
 
         async function handleAuth() {
             try {
-                if (typeof __initial_auth_token !== 'undefined' && __initial_auth_token) {
-                    // Usa authInstance (corrigido para TS2345)
-                    await signInWithCustomToken(authInstance, __initial_auth_token); 
+                if (initialAuthToken) {
+                    // USO DA ASSERÇÃO !
+                    await signInWithCustomToken(authInstance, initialAuthToken); 
                 } else {
-                    // Usa authInstance (corrigido para TS2345)
+                    // USO DA ASSERÇÃO !
                     await signInAnonymously(authInstance); 
                 }
             } catch (error) {
@@ -43,7 +43,7 @@ export default function MainAppContent() {
         });
 
         return () => unsubscribe();
-    }, []);
+    }, [initialAuthToken]);
 
     if (loading) {
         return (
@@ -53,6 +53,7 @@ export default function MainAppContent() {
         );
     }
     
+    // Checagem de falha de inicialização (tela vermelha)
     if (!auth) { 
         return (
             <div className="flex h-screen items-center justify-center bg-red-100 text-red-700 p-8">
