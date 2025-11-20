@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import { onAuthStateChanged, User, signInWithCustomToken, signInAnonymously } from "firebase/auth";
 import { auth } from './firebase/firebaseClient'; 
-import AuthForm from './AuthForm'; // Importa o componente de Login/Cadastro
+import AuthForm from './AuthForm';
 
 declare const __app_id: string;
 declare const __initial_auth_token: string;
@@ -14,13 +14,14 @@ export default function MainAppContent() {
     const initialAuthToken = import.meta.env.VITE_INITIAL_AUTH_TOKEN;
 
     useEffect(() => {
-        const authInstance = auth; // Captura a instância (Auth | null)
+        const authInstance = auth; 
 
         if (!authInstance) {
             setLoading(false);
             return;
         }
 
+        // Esta função usa a asserção de não-nulidade para satisfazer o compilador
         async function handleAuth() {
             try {
                 if (initialAuthToken) {
