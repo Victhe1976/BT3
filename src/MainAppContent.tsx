@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { onAuthStateChanged, User, signInWithCustomToken, signInAnonymously } from "firebase/auth";
 import { auth } from './firebase/firebaseClient'; 
+import AuthForm from './AuthForm'; 
 
 declare const __app_id: string;
 declare const __initial_auth_token: string;
