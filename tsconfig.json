@@ -13,6 +13,9 @@
     "isolatedModules": true,
     "noEmit": true,
     "jsx": "react-jsx",
+    
+    /* 💡 CORREÇÃO CRÍTICA: Adiciona o tipo do Vite para reconhecer import.meta.env */
+    "types": ["vite/client"], 
 
     /* Linting */
     "strict": true,
@@ -20,9 +23,7 @@
     "noUnusedParameters": true,
     "noFallthroughCasesInSwitch": true
   },
-  
-  "include": ["src/**/*.ts", "src/**/*.tsx"], 
+  "include": ["src/**/*.ts", "src/**/*.tsx"],
   "exclude": ["node_modules", "dist", "vite.config.ts", "tailwind.config.js", "postcss.config.js"],
-  
   "references": [{ "path": "./tsconfig.node.json" }]
 }
