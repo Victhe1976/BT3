@@ -2,27 +2,29 @@ import { useEffect, useState } from "react";
 import { onAuthStateChanged, User, signInWithCustomToken, signInAnonymously } from "firebase/auth";
 import { auth } from './firebase/firebaseClient'; 
 
+declare const __app_id: string;
+declare const __initial_auth_token: string;
+
 export default function MainAppContent() {
     const [user, setUser] = useState<User | null>(null);
     const [loading, setLoading] = useState(true);
 
-    const initialAuthToken = import.meta.env.VITE_INITIAL_AUTH_TOKEN;
-    const appId = import.meta.env.VITE_APP_ID || 'default-app-id';
-
     useEffect(() => {
-        const authInstance = auth; // Captura a instância (Auth | null)
+        const authInstance = auth; // Captures the instance (Auth | null)
 
         if (!authInstance) {
             setLoading(false);
             return;
         }
 
-        // A função usa a variável local authInstance, que é garantidamente não nula.
+        // The inner function uses the guaranteed non-null local variable authInstance.
         async function handleAuth() {
             try {
-                if (initialAuthToken) {
-                    await signInWithCustomToken(authInstance, initialAuthToken); 
+                if (typeof __initial_auth_token !== 'undefined' && __initial_auth_token) {
+                    // CORRECTED USAGE: Using authInstance (guaranteed non-null Auth)
+                    await signInWithCustomToken(authInstance, __initial_auth_token); 
                 } else {
+                    // CORRECTED USAGE: Using authInstance (guaranteed non-null Auth)
                     await signInAnonymously(authInstance); 
                 }
             } catch (error) {
@@ -38,7 +40,7 @@ export default function MainAppContent() {
         });
 
         return () => unsubscribe();
-    }, [initialAuthToken]);
+    }, []);
 
     if (loading) {
         return (
@@ -58,6 +60,7 @@ export default function MainAppContent() {
         );
     }
     
+    const appId = import.meta.env.VITE_APP_ID || 'default-app-id';
     const userId = user?.uid || 'Desconectado';
     const displayEmail = user?.email || (user?.isAnonymous ? 'Anônimo' : 'Convidado'); 
 
