@@ -1,9 +1,8 @@
 import React, { useState, useRef } from 'react';
 import { Player } from '../../types';
 import { EditIcon, TrashIcon, UserPlusIcon, CameraIcon } from './Icons';
-// Importamos a instância 'storage'
-import { storage } from '../firebaseConfig'; 
-// FirebaseStorage REMOVIDO das imports (TS6133)
+// Importação corrigida para usar o módulo centralizado
+import { storage } from '../firebase/firebaseClient'; 
 import { ref, uploadBytes, getDownloadURL } from 'firebase/storage'; 
 
 interface PlayerManagerProps {
@@ -80,12 +79,13 @@ const PlayerManager: React.FC<PlayerManagerProps> = ({ players, pendingPlayers, 
   };
 
   const uploadAvatarAndGetURL = async (file: File, playerName: string): Promise<string> => {
-    // CORREÇÃO: Verifica se storage existe antes de usar 'ref'
+    // Verifica se storage existe antes de usar 'ref'
     if (!storage || !file) return ''; 
 
     const fileExtension = file.name.split('.').pop();
     const fileName = `${playerName.replace(/\s/g, '_')}_${Date.now()}.${fileExtension}`;
     
+    // Usa a instância 'storage' importada
     const imageRef = ref(storage, `avatares/${fileName}`); 
 
     await uploadBytes(imageRef, file);
