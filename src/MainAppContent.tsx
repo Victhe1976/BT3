@@ -1,17 +1,34 @@
-import { useEffect, useState } from "react";
-import { onAuthStateChanged, User, signInWithCustomToken, signInAnonymously } from "firebase/auth";
+import { useEffect, useState, useMemo } from "react";
+import { onAuthStateChanged, User, signInWithCustomToken, signInAnonymously, signOut } from "firebase/auth";
 import { auth } from './firebase/firebaseClient'; 
-import AuthForm from './AuthForm'; 
+import AuthForm from './AuthForm'; // Componente de Login/Cadastro
+// Assumindo que você tem os tipos definidos aqui
+import { Player, Match } from '../../types'; 
+// Assumindo que o useFirestoreData foi corrigido para este caminho
+import { useFirestoreData } from './useFirestoreData'; 
 
-declare const __app_id: string;
-declare const __initial_auth_token: string;
 
 export default function MainAppContent() {
     const [user, setUser] = useState<User | null>(null);
     const [loading, setLoading] = useState(true);
 
+    // --- Integração Firestore Data Hooks ---
+    // TS-Note: useFirestoreData deve ser tipado com PlayerData e MatchData definidos em useFirestoreData.tsx
+    const { data: playersData, loading: playersLoading, error: playersError } = useFirestoreData<Player>('players');
+    const { data: matchesData, loading: matchesLoading, error: matchesError } = useFirestoreData<Match>('matches');
+
+    const players = useMemo(() => playersData || [], [playersData]);
+    const matches = useMemo(() => matchesData || [], [matchesData]);
+    const isDataLoading = playersLoading || matchesLoading;
+    // ----------------------------------------
+
+
+    // Leitura das variáveis do ambiente
+    const appId = import.meta.env.VITE_APP_ID || 'default-app-id';
+    const initialAuthToken = import.meta.env.VITE_INITIAL_AUTH_TOKEN;
+
     useEffect(() => {
-        const authInstance = auth; // Captura a instância (Auth | null)
+        const authInstance = auth; 
 
         if (!authInstance) {
             setLoading(false);
@@ -20,19 +37,16 @@ export default function MainAppContent() {
 
         async function handleAuth() {
             try {
-                if (typeof __initial_auth_token !== 'undefined' && __initial_auth_token) {
-                    // USO DO OPERADOR ! (Asserção de Não-Nulidade)
-                    await signInWithCustomToken(auth!, __initial_auth_token); 
+                if (initialAuthToken) {
+                    await signInWithCustomToken(authInstance, initialAuthToken); 
                 } else {
-                    // USO DO OPERADOR !
-                    await signInAnonymously(auth!); 
+                    await signInAnonymously(authInstance); 
                 }
             } catch (error) {
                 console.error("Erro na autenticação inicial:", error);
             }
         }
         
-        // Chamamos handleAuth para acionar o login/anonimização
         handleAuth(); 
 
         const unsubscribe = onAuthStateChanged(authInstance, (currentUser) => {
@@ -41,54 +55,77 @@ export default function MainAppContent() {
         });
 
         return () => unsubscribe();
-    }, []);
+    }, [initialAuthToken]);
 
-    if (loading) {
+    const handleLogout = () => {
+        if (auth) {
+            signOut(auth).catch(err => console.error("Erro ao fazer logout:", err));
+        }
+    };
+
+
+    if (loading || isDataLoading) {
         return (
           <div className="flex h-screen items-center justify-center bg-gray-50">
-            <p className="text-xl text-blue-600 font-medium">Carregando...</p>
+            <p className="text-xl text-blue-600 font-medium">Carregando dados da aplicação...</p>
           </div>
         );
     }
     
-    // Checagem de falha de inicialização (tela vermelha)
-    if (!auth) { 
+    // Mostra erro crítico de inicialização do Firebase (se auth for nulo)
+    if (!auth || playersError || matchesError) { 
         return (
             <div className="flex h-screen items-center justify-center bg-red-100 text-red-700 p-8">
                 <p className="text-xl">
-                    🔴 Falha na inicialização. Verifique as configurações do Firebase.
+                    🔴 Falha Crítica: {playersError || matchesError || "Configuração do Firebase ausente."}
                 </p>
             </div>
         );
     }
     
-    const appId = import.meta.env.VITE_APP_ID || 'default-app-id';
     const userId = user?.uid || 'Desconectado';
     const displayEmail = user?.email || (user?.isAnonymous ? 'Anônimo' : 'Convidado'); 
 
-   return (
+    return (
         <div className="p-4 bg-gray-50 min-h-screen">
-          <div className="max-w-md mx-auto bg-white p-6 rounded-xl shadow-lg mt-10">
+            <div className="max-w-6xl mx-auto">
             {user ? (
-              // Se o usuário está logado, mostra o painel
-              <div>
-                <h1 className="text-2xl font-bold mb-2 text-green-600">
-                  Bem-vindo, {displayEmail}
-                </h1>
-                <p className="text-sm text-gray-500 mb-4">
-                    ID do Usuário: <code className="bg-gray-100 p-1 rounded text-xs">{userId}</code>
-                </p>
-                <p className="mt-4 text-gray-700">O conteúdo principal do seu aplicativo irá aqui.</p>
+              // CONTEÚDO PRINCIPAL (LOGADO)
+              <div className="bg-white p-6 rounded-xl shadow-lg mt-4">
+                <div className="flex justify-between items-center mb-6 border-b pb-4">
+                    <h1 className="text-2xl font-bold text-green-600">
+                      Painel Principal
+                    </h1>
+                    <div className="flex items-center gap-4">
+                        <span className="text-sm text-gray-600 hidden sm:inline">
+                            Logado como: **{displayEmail}**
+                        </span>
+                        <button 
+                            onClick={handleLogout}
+                            className="bg-red-500 hover:bg-red-600 text-white py-1 px-4 rounded-lg text-sm font-semibold transition"
+                        >
+                            Sair
+                        </button>
+                    </div>
+                </div>
+
+                {/* Aqui entrarão os componentes PlayerManager, MatchRegistry, MatchHistory */}
+                <p className="text-gray-700">Dados de Jogadores Carregados: **{players.length}**</p>
+                <p className="text-gray-700">Dados de Partidas Carregadas: **{matches.length}**</p>
+
+                {/* Exemplo: <PlayerManager players={players} ... /> */}
+
               </div>
             ) : (
-              // Se o usuário não está logado, mostra o formulário de autenticação
-              <div className="text-center">
-                <h1 className="text-2xl font-bold text-red-600 mb-4">Você não está logado</h1>
-                <p className="mt-2 text-gray-600 mb-8">Por favor, faça login para acessar o conteúdo.</p>
+              // TELA DE LOGIN (DESCONECTADO)
+              <div className="max-w-sm mx-auto p-6 bg-white rounded-xl shadow-lg mt-20">
+                <h1 className="text-2xl font-bold text-red-600 mb-4 text-center">Acesso Restrito</h1>
+                <p className="mt-2 text-gray-600 mb-8 text-center">Entre ou crie sua conta para acessar o sistema.</p>
                 <AuthForm /> 
               </div>
             )}
-          </div>
+            </div>
+
           <p className="text-center mt-4 text-xs text-gray-400">
               App ID: {appId}
           </p>
