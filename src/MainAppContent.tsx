@@ -65,33 +65,29 @@ export default function MainAppContent() {
     const userId = user?.uid || 'Desconectado';
     const displayEmail = user?.email || (user?.isAnonymous ? 'Anônimo' : 'Convidado'); 
 
-   return (
-    <div className="p-4 bg-gray-50 min-h-screen">
-      <div className="max-w-md mx-auto bg-white p-6 rounded-xl shadow-lg mt-10">
-        {user ? (
-          // Conteúdo para usuário logado
-          <div>
-            <h1 className="text-2xl font-bold mb-2 text-green-600">
-              Bem-vindo, {displayEmail}
-            </h1>
-            <p className="text-sm text-gray-500 mb-4">
-              ID do Usuário: <code className="bg-gray-100 p-1 rounded text-xs">{userId}</code>
-            </p>
-            <p className="mt-4 text-gray-700">O conteúdo principal do seu aplicativo irá aqui.</p>
+    return (
+        <div className="p-4 bg-gray-50 min-h-screen">
+          <div className="max-w-4xl mx-auto bg-white p-6 rounded-xl shadow-lg">
+            {user ? (
+              <div>
+                <h1 className="text-2xl font-bold mb-2 text-green-600">
+                  Bem-vindo, {displayEmail}
+                </h1>
+                <p className="text-sm text-gray-500 mb-4">
+                    ID do Usuário: <code className="bg-gray-100 p-1 rounded text-xs">{userId}</code>
+                </p>
+                <p className="mt-4 text-gray-700">O conteúdo principal do seu aplicativo irá aqui.</p>
+              </div>
+            ) : (
+              <div>
+                <h1 className="text-2xl font-bold text-red-600">Você não está logado</h1>
+                <p className="mt-2 text-gray-600">Por favor, faça login para acessar o conteúdo.</p>
+              </div>
+            )}
           </div>
-        ) : (
-          // Conteúdo para usuário NÃO logado (Integração do AuthForm)
-          <div className="text-center">
-            <h1 className="text-2xl font-bold text-red-600 mb-4">Você não está logado</h1>
-            <p className="mt-2 text-gray-600 mb-8">Por favor, faça login para acessar o conteúdo.</p>
-            {/* Componente AuthForm é integrado aqui */}
-            <AuthForm /> 
-          </div>
-        )}
-      </div>
-      <p className="text-center mt-4 text-xs text-gray-400">
-          App ID: {appId}
-      </p>
-    </div>
-);
+          <p className="text-center mt-4 text-xs text-gray-400">
+              App ID: {appId}
+          </p>
+        </div>
+    );
 }
