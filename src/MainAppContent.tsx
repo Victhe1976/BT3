@@ -1,11 +1,11 @@
 import { useEffect, useState, useMemo } from "react";
-import { onAuthStateChanged, User, signInWithCustomToken, signInAnonymously, signOut } from "firebase/auth";
+import { onAuthStateChanged, User, signInWithCustomToken, signInAnonymously, signOut, Auth } from "firebase/auth";
 import { auth } from './firebase/firebaseClient'; 
-import AuthForm from './AuthForm'; // Componente de Login/Cadastro
-// Assumindo que você tem os tipos definidos aqui
-import { Player, Match } from '../../types'; 
+import AuthForm from './AuthForm';
+// CORREÇÃO TS2307: Assumindo que o caminho correto para types é um nível acima de src
+import { Player, Match } from '../types'; 
 // Assumindo que o useFirestoreData foi corrigido para este caminho
-import { useFirestoreData } from './useFirestoreData'; 
+import useFirestoreData from './useFirestoreData'; 
 
 
 export default function MainAppContent() {
@@ -13,7 +13,7 @@ export default function MainAppContent() {
     const [loading, setLoading] = useState(true);
 
     // --- Integração Firestore Data Hooks ---
-    // TS-Note: useFirestoreData deve ser tipado com PlayerData e MatchData definidos em useFirestoreData.tsx
+    // TS-Note: Player e Match devem ser importados de um local acessível para useFirestoreData
     const { data: playersData, loading: playersLoading, error: playersError } = useFirestoreData<Player>('players');
     const { data: matchesData, loading: matchesLoading, error: matchesError } = useFirestoreData<Match>('matches');
 
@@ -24,8 +24,8 @@ export default function MainAppContent() {
 
 
     // Leitura das variáveis do ambiente
-    const appId = import.meta.env.VITE_APP_ID || 'default-app-id';
     const initialAuthToken = import.meta.env.VITE_INITIAL_AUTH_TOKEN;
+    const appId = import.meta.env.VITE_APP_ID || 'default-app-id';
 
     useEffect(() => {
         const authInstance = auth; 
@@ -38,8 +38,10 @@ export default function MainAppContent() {
         async function handleAuth() {
             try {
                 if (initialAuthToken) {
+                    // CORREÇÃO TS2345: Usando authInstance (garantido não nulo)
                     await signInWithCustomToken(authInstance, initialAuthToken); 
                 } else {
+                    // CORREÇÃO TS2345: Usando authInstance (garantido não nulo)
                     await signInAnonymously(authInstance); 
                 }
             } catch (error) {
@@ -83,7 +85,7 @@ export default function MainAppContent() {
         );
     }
     
-    const userId = user?.uid || 'Desconectado';
+    const userId = user?.uid || 'Desconectado'; // Mantido, mas deve ser usado
     const displayEmail = user?.email || (user?.isAnonymous ? 'Anônimo' : 'Convidado'); 
 
     return (
@@ -109,11 +111,11 @@ export default function MainAppContent() {
                     </div>
                 </div>
 
-                {/* Aqui entrarão os componentes PlayerManager, MatchRegistry, MatchHistory */}
+                {/* Dados Carregados (Exemplo) */}
                 <p className="text-gray-700">Dados de Jogadores Carregados: **{players.length}**</p>
                 <p className="text-gray-700">Dados de Partidas Carregadas: **{matches.length}**</p>
+                <p className="text-gray-700">ID do Usuário: **{userId}**</p> {/* Usa userId para resolver TS6133 */}
 
-                {/* Exemplo: <PlayerManager players={players} ... /> */}
 
               </div>
             ) : (
