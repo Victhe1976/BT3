@@ -10,21 +10,19 @@ export default function MainAppContent() {
     const [loading, setLoading] = useState(true);
 
     useEffect(() => {
-        const authInstance = auth; // Captures the instance (Auth | null)
+        const authInstance = auth; // Captura a instância (Auth | null)
 
         if (!authInstance) {
             setLoading(false);
             return;
         }
 
-        // The inner function uses the guaranteed non-null local variable authInstance.
+        // Simplificação: handleAuth não recebe argumentos e usa a variável local authInstance.
         async function handleAuth() {
             try {
                 if (typeof __initial_auth_token !== 'undefined' && __initial_auth_token) {
-                    // CORRECTED USAGE: Using authInstance (guaranteed non-null Auth)
                     await signInWithCustomToken(authInstance, __initial_auth_token); 
                 } else {
-                    // CORRECTED USAGE: Using authInstance (guaranteed non-null Auth)
                     await signInAnonymously(authInstance); 
                 }
             } catch (error) {
@@ -50,6 +48,7 @@ export default function MainAppContent() {
         );
     }
     
+    // Este código deve ser executado no navegador após o build.
     if (!auth) { 
         return (
             <div className="flex h-screen items-center justify-center bg-red-100 text-red-700 p-8">
