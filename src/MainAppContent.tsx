@@ -1,10 +1,9 @@
 import { useEffect, useState, useMemo } from "react";
-import { onAuthStateChanged, User, signInWithCustomToken, signInAnonymously, signOut, Auth } from "firebase/auth";
+// Removendo 'Auth' da importação para resolver TS6133
+import { onAuthStateChanged, User, signInWithCustomToken, signInAnonymously, signOut } from "firebase/auth";
 import { auth } from './firebase/firebaseClient'; 
-import AuthForm from './AuthForm';
-// CORREÇÃO TS2307: Assumindo que o caminho correto para types é um nível acima de src
+import AuthForm from './AuthForm'; 
 import { Player, Match } from '../types'; 
-// Assumindo que o useFirestoreData foi corrigido para este caminho
 import useFirestoreData from './useFirestoreData'; 
 
 
@@ -12,23 +11,19 @@ export default function MainAppContent() {
     const [user, setUser] = useState<User | null>(null);
     const [loading, setLoading] = useState(true);
 
-    // --- Integração Firestore Data Hooks ---
-    // TS-Note: Player e Match devem ser importados de um local acessível para useFirestoreData
     const { data: playersData, loading: playersLoading, error: playersError } = useFirestoreData<Player>('players');
     const { data: matchesData, loading: matchesLoading, error: matchesError } = useFirestoreData<Match>('matches');
 
     const players = useMemo(() => playersData || [], [playersData]);
     const matches = useMemo(() => matchesData || [], [matchesData]);
     const isDataLoading = playersLoading || matchesLoading;
-    // ----------------------------------------
 
 
-    // Leitura das variáveis do ambiente
     const initialAuthToken = import.meta.env.VITE_INITIAL_AUTH_TOKEN;
     const appId = import.meta.env.VITE_APP_ID || 'default-app-id';
 
     useEffect(() => {
-        const authInstance = auth; 
+        const authInstance = auth; // Captura a instância (Auth | null)
 
         if (!authInstance) {
             setLoading(false);
@@ -85,7 +80,7 @@ export default function MainAppContent() {
         );
     }
     
-    const userId = user?.uid || 'Desconectado'; // Mantido, mas deve ser usado
+    const userId = user?.uid || 'Desconectado';
     const displayEmail = user?.email || (user?.isAnonymous ? 'Anônimo' : 'Convidado'); 
 
     return (
@@ -111,11 +106,9 @@ export default function MainAppContent() {
                     </div>
                 </div>
 
-                {/* Dados Carregados (Exemplo) */}
                 <p className="text-gray-700">Dados de Jogadores Carregados: **{players.length}**</p>
                 <p className="text-gray-700">Dados de Partidas Carregadas: **{matches.length}**</p>
-                <p className="text-gray-700">ID do Usuário: **{userId}**</p> {/* Usa userId para resolver TS6133 */}
-
+                <p className="text-gray-700">ID do Usuário: **{userId}**</p>
 
               </div>
             ) : (
