@@ -6,10 +6,8 @@ export default function MainAppContent() {
     const [user, setUser] = useState<User | null>(null);
     const [loading, setLoading] = useState(true);
 
-    // 💡 LÊ VARIÁVEIS COM O PREFIXO VITE_
     const initialAuthToken = import.meta.env.VITE_INITIAL_AUTH_TOKEN;
     const appId = import.meta.env.VITE_APP_ID || 'default-app-id';
-
 
     useEffect(() => {
         const authInstance = auth; // Captura a instância (Auth | null)
@@ -19,13 +17,12 @@ export default function MainAppContent() {
             return;
         }
 
+        // A função usa a variável local authInstance, que é garantidamente não nula.
         async function handleAuth() {
             try {
                 if (initialAuthToken) {
-                    // USO DE authInstance (resolve TS2345)
                     await signInWithCustomToken(authInstance, initialAuthToken); 
                 } else {
-                    // USO DE authInstance (resolve TS2345)
                     await signInAnonymously(authInstance); 
                 }
             } catch (error) {
@@ -41,7 +38,7 @@ export default function MainAppContent() {
         });
 
         return () => unsubscribe();
-    }, [initialAuthToken]); // Adiciona dependência para evitar avisos
+    }, [initialAuthToken]);
 
     if (loading) {
         return (
