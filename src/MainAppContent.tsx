@@ -1,5 +1,4 @@
 import { useEffect, useState, useMemo } from "react";
-// Removendo 'Auth' da importação para resolver TS6133
 import { onAuthStateChanged, User, signInWithCustomToken, signInAnonymously, signOut } from "firebase/auth";
 import { auth } from './firebase/firebaseClient'; 
 import AuthForm from './AuthForm'; 
@@ -33,10 +32,10 @@ export default function MainAppContent() {
         async function handleAuth() {
             try {
                 if (initialAuthToken) {
-                    // CORREÇÃO TS2345: Usando authInstance (garantido não nulo)
+                    // CORREÇÃO TS2345: Uso de authInstance (garantido não nulo)
                     await signInWithCustomToken(authInstance, initialAuthToken); 
                 } else {
-                    // CORREÇÃO TS2345: Usando authInstance (garantido não nulo)
+                    // CORREÇÃO TS2345: Uso de authInstance (garantido não nulo)
                     await signInAnonymously(authInstance); 
                 }
             } catch (error) {
