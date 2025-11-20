@@ -2,16 +2,19 @@ import { useEffect, useState } from "react";
 import { onAuthStateChanged, User, signInWithCustomToken, signInAnonymously } from "firebase/auth";
 import { auth } from './firebase/firebaseClient'; 
 
-declare const __app_id: string;
-declare const __initial_auth_token: string;
+// As declarações 'declare const' foram substituídas pela leitura de import.meta.env
+// A declaração das variáveis __app_id e __initial_auth_token não é mais necessária aqui
 
 export default function MainAppContent() {
     const [user, setUser] = useState<User | null>(null);
     const [loading, setLoading] = useState(true);
 
+    // Variáveis lidas do ambiente do Vite
+    const initialAuthToken = import.meta.env.VITE_INITIAL_AUTH_TOKEN;
+    const appId = import.meta.env.VITE_APP_ID || 'default-app-id';
+
     useEffect(() => {
-        // Capturamos authInstance localmente para uso no listener
-        const authInstance = auth; 
+        const authInstance = auth;
 
         if (!authInstance) {
             setLoading(false);
@@ -20,12 +23,10 @@ export default function MainAppContent() {
 
         async function handleAuth() {
             try {
-                if (typeof __initial_auth_token !== 'undefined' && __initial_auth_token) {
-                    // USO DA ASSERÇÃO 'auth!': Resolve o erro TS2345
-                    await signInWithCustomToken(auth!, __initial_auth_token); 
+                if (initialAuthToken) {
+                    await signInWithCustomToken(authInstance, initialAuthToken); 
                 } else {
-                    // USO DA ASSERÇÃO 'auth!': Resolve o erro TS2345
-                    await signInAnonymously(auth!); 
+                    await signInAnonymously(authInstance); 
                 }
             } catch (error) {
                 console.error("Erro na autenticação inicial:", error);
@@ -40,7 +41,7 @@ export default function MainAppContent() {
         });
 
         return () => unsubscribe();
-    }, []);
+    }, [initialAuthToken]); // Adiciona initialAuthToken como dependência
 
     if (loading) {
         return (
@@ -50,7 +51,6 @@ export default function MainAppContent() {
         );
     }
     
-    // Check for Firebase initialization failure
     if (!auth) { 
         return (
             <div className="flex h-screen items-center justify-center bg-red-100 text-red-700 p-8">
@@ -61,7 +61,6 @@ export default function MainAppContent() {
         );
     }
     
-    const appId = typeof __app_id !== 'undefined' ? __app_id : 'default-app-id';
     const userId = user?.uid || 'Desconectado';
     const displayEmail = user?.email || (user?.isAnonymous ? 'Anônimo' : 'Convidado'); 
 
