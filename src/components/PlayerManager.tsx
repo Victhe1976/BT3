@@ -1,9 +1,10 @@
 import React, { useState, useRef } from 'react';
 import { Player } from '../../types';
 import { EditIcon, TrashIcon, UserPlusIcon, CameraIcon } from './Icons';
-import { storage } from '../firebaseConfig';
-import { ref, uploadBytes, getDownloadURL } from 'firebase/storage';
-// Linha 9 removida (useFirestoreData)
+// Importamos a instância 'storage'
+import { storage } from '../firebaseConfig'; 
+import { ref, uploadBytes, getDownloadURL, FirebaseStorage } from 'firebase/storage';
+// useFirestoreData removido (assumindo que estava dando TS6133 anteriormente)
 
 interface PlayerManagerProps {
   players: Player[];
@@ -78,12 +79,19 @@ const PlayerManager: React.FC<PlayerManagerProps> = ({ players, pendingPlayers, 
     }
   };
 
+  // --------------------------------------------------------
+  // LÓGICA DE UPLOAD PARA FIREBASE STORAGE (CORRIGIDO)
+  // --------------------------------------------------------
+
   const uploadAvatarAndGetURL = async (file: File, playerName: string): Promise<string> => {
-    if (!file) return '';
+    // 💡 CORREÇÃO TS2769: Verifica se storage existe antes de usar 'ref'
+    if (!storage || !file) return ''; 
 
     const fileExtension = file.name.split('.').pop();
     const fileName = `${playerName.replace(/\s/g, '_')}_${Date.now()}.${fileExtension}`;
-    const imageRef = ref(storage, `avatares/${fileName}`);
+    
+    // Agora 'storage' é do tipo FirebaseStorage, satisfazendo a função ref()
+    const imageRef = ref(storage, `avatares/${fileName}`); 
 
     await uploadBytes(imageRef, file);
 
@@ -113,9 +121,12 @@ const PlayerManager: React.FC<PlayerManagerProps> = ({ players, pendingPlayers, 
     try {
       let finalAvatarURL = avatarPreview;
       
+      // 1. Se houver um novo arquivo, faça o upload
       if (avatarFile) {
+        // uploadAvatarAndGetURL agora lida com o caso em que storage é null
         finalAvatarURL = await uploadAvatarAndGetURL(avatarFile, name);
       } else if (!editingPlayer && !avatarPreview) {
+        // 2. Se for um novo jogador e não tiver upload, use o avatar padrão
         finalAvatarURL = `https://avatar.iran.liara.run/public/boy?username=${encodeURIComponent(name)}${Date.now()}`;
       }
       
