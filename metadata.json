@@ -1,0 +1,5 @@
+{
+  "name": "BT dos Parça",
+  "description": "An application to manage a friendly beach tennis championship, including player registration, match tracking, rankings, and individual statistics.",
+  "requestFramePermissions": []
+}
