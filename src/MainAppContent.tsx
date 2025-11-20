@@ -1,7 +1,6 @@
 import { useEffect, useState } from "react";
 import { onAuthStateChanged, User, signInWithCustomToken, signInAnonymously } from "firebase/auth";
 import { auth } from './firebase/firebaseClient'; 
-import AuthForm from './AuthForm';
 
 declare const __app_id: string;
 declare const __initial_auth_token: string;
@@ -10,32 +9,29 @@ export default function MainAppContent() {
     const [user, setUser] = useState<User | null>(null);
     const [loading, setLoading] = useState(true);
 
-    const appId = import.meta.env.VITE_APP_ID || 'default-app-id';
-    const initialAuthToken = import.meta.env.VITE_INITIAL_AUTH_TOKEN;
-
     useEffect(() => {
-        const authInstance = auth; 
+        const authInstance = auth; // Captura a instância (Auth | null)
 
         if (!authInstance) {
             setLoading(false);
             return;
         }
 
-        // Esta função usa a asserção de não-nulidade para satisfazer o compilador
         async function handleAuth() {
             try {
-                if (initialAuthToken) {
-                    // USO DA ASSERÇÃO !
-                    await signInWithCustomToken(authInstance, initialAuthToken); 
+                if (typeof __initial_auth_token !== 'undefined' && __initial_auth_token) {
+                    // USO DO OPERADOR ! (Asserção de Não-Nulidade)
+                    await signInWithCustomToken(auth!, __initial_auth_token); 
                 } else {
-                    // USO DA ASSERÇÃO !
-                    await signInAnonymously(authInstance); 
+                    // USO DO OPERADOR !
+                    await signInAnonymously(auth!); 
                 }
             } catch (error) {
                 console.error("Erro na autenticação inicial:", error);
             }
         }
         
+        // Chamamos handleAuth para acionar o login/anonimização
         handleAuth(); 
 
         const unsubscribe = onAuthStateChanged(authInstance, (currentUser) => {
@@ -44,7 +40,7 @@ export default function MainAppContent() {
         });
 
         return () => unsubscribe();
-    }, [initialAuthToken]);
+    }, []);
 
     if (loading) {
         return (
@@ -65,10 +61,11 @@ export default function MainAppContent() {
         );
     }
     
+    const appId = import.meta.env.VITE_APP_ID || 'default-app-id';
     const userId = user?.uid || 'Desconectado';
     const displayEmail = user?.email || (user?.isAnonymous ? 'Anônimo' : 'Convidado'); 
 
-    return (
+   return (
         <div className="p-4 bg-gray-50 min-h-screen">
           <div className="max-w-md mx-auto bg-white p-6 rounded-xl shadow-lg mt-10">
             {user ? (
