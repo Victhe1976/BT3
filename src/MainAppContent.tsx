@@ -4,35 +4,29 @@ import { auth } from './firebase/firebaseClient';
 import AuthForm from './AuthForm'; 
 import { Player, Match } from '../types'; 
 import useFirestoreData from './useFirestoreData'; 
-
-// Importa os componentes (assumindo que o caminho é correto)
 import PlayerManager from './components/PlayerManager';
 import MatchRegistry from './components/MatchRegistry';
 import MatchHistory from './components/MatchHistory'; 
 
-// Define as abas disponíveis
 const TABS = {
     MANAGER: 'Gerenciar Jogadores',
     REGISTRY: 'Registrar Partida',
     HISTORY: 'Histórico de Jogos'
 };
 
-// --- DUMMY CRUD FUNCTIONS (Necessárias para props, se não exportadas pelo hook) ---
 const placeholderAddPlayer = (player: Omit<Player, 'id'>) => console.log("ADD PLAYER: Not implemented here.", player);
 const placeholderUpdatePlayer = (player: Player) => console.log("UPDATE PLAYER: Not implemented here.", player);
 const placeholderDeletePlayer = (playerId: string) => console.log("DELETE PLAYER: Not implemented here.", playerId);
 const placeholderAddMatches = (matches: Match[]) => console.log("ADD MATCHES: Not implemented here.", matches);
-// ---
+const placeholderSetPendingPlayers = (players: string[]) => console.log("SET PENDING PLAYERS: Not implemented here.", players);
 
 export default function MainAppContent() {
     const [user, setUser] = useState<User | null>(null);
     const [loading, setLoading] = useState(true);
     const [activeTab, setActiveTab] = useState(TABS.REGISTRY);
 
-    // 💡 TS6133 FIX: setPendingPlayers declared and used in PlayerManager props
     const [pendingPlayers, setPendingPlayers] = useState<string[]>([]);
     
-    // Integração Firestore Data Hooks
     const { data: playersData, loading: playersLoading, error: playersError } = useFirestoreData<Player>('players');
     const { data: matchesData, loading: matchesLoading, error: matchesError } = useFirestoreData<Match>('matches');
 
@@ -55,10 +49,11 @@ export default function MainAppContent() {
         async function handleAuth() {
             try {
                 if (initialAuthToken && initialAuthToken.length > 0) {
-                    // RESOLVIDO TS2345: Usa authInstance (garantido non-null)
-                    await signInWithCustomToken(authInstance, initialAuthToken); 
+                    // RESOLVE TS2345: Usa a asserção de não-nulidade (!)
+                    await signInWithCustomToken(authInstance!, initialAuthToken); 
                 } else {
-                    await signInAnonymously(authInstance); 
+                    // RESOLVE TS2345: Usa a asserção de não-nulidade (!)
+                    await signInAnonymously(authInstance!); 
                 }
             } catch (error) {
                 console.error("Erro na autenticação inicial:", error);
@@ -81,7 +76,6 @@ export default function MainAppContent() {
         }
     };
 
-    // 💡 TS6133 FIX: userId is calculated and used in the JSX below.
     const userId = user?.uid || 'Desconectado';
     const displayEmail = user?.email || (user?.isAnonymous ? 'Anônimo' : 'Convidado'); 
 
@@ -107,7 +101,6 @@ export default function MainAppContent() {
         <div className="p-4 bg-gray-50 min-h-screen">
             <div className="max-w-6xl mx-auto">
             {user ? (
-              // CONTEÚDO PRINCIPAL (LOGADO)
               <div className="bg-white p-6 rounded-xl shadow-lg mt-4">
                 <div className="flex justify-between items-center mb-6 border-b pb-4">
                     <h1 className="text-2xl font-bold text-green-600">
@@ -126,7 +119,6 @@ export default function MainAppContent() {
                     </div>
                 </div>
 
-                {/* --- NAVEGAÇÃO POR ABAS --- */}
                 <div className="flex border-b border-gray-200 mb-6">
                     {Object.values(TABS).map(tab => (
                         <button
@@ -143,14 +135,12 @@ export default function MainAppContent() {
                     ))}
                 </div>
 
-                {/* --- RENDERIZAÇÃO CONDICIONAL --- */}
                 <div className="py-4">
                     {activeTab === TABS.MANAGER && (
-                        // 💡 TS2322 FIX: setPendingPlayers is the state setter.
                         <PlayerManager 
                             players={players}
                             pendingPlayers={pendingPlayers}
-                            setPendingPlayers={setPendingPlayers} 
+                            setPendingPlayers={setPendingPlayers}
                             addPlayer={placeholderAddPlayer}
                             updatePlayer={placeholderUpdatePlayer}
                             deletePlayer={placeholderDeletePlayer}
@@ -175,7 +165,6 @@ export default function MainAppContent() {
 
               </div>
             ) : (
-              // TELA DE LOGIN (DESCONECTADO)
               <div className="max-w-sm mx-auto p-6 bg-white rounded-xl shadow-lg mt-20">
                 <h1 className="text-2xl font-bold text-red-600 mb-4 text-center">Acesso Restrito</h1>
                 <p className="mt-2 text-gray-600 mb-8 text-center">Entre ou crie sua conta para acessar o sistema.</p>
