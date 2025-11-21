@@ -5,19 +5,10 @@ import AuthForm from './AuthForm';
 import { Player, Match } from '../types'; 
 import useFirestoreData from './useFirestoreData'; 
 
-// 💡 CORREÇÃO TS2304: Assumindo que os componentes estão na pasta './components/'
+// Importa os componentes (assumindo que o caminho é correto)
 import PlayerManager from './components/PlayerManager';
 import MatchRegistry from './components/MatchRegistry';
 import MatchHistory from './components/MatchHistory'; 
-
-
-// --- DUMMY CRUD FUNCTIONS (Necessárias para PlayerManager/MatchRegistry props) ---
-const placeholderAddPlayer = (player: Omit<Player, 'id'>) => console.log("ADD PLAYER: Not implemented here.", player);
-const placeholderUpdatePlayer = (player: Player) => console.log("UPDATE PLAYER: Not implemented here.", player);
-const placeholderDeletePlayer = (playerId: string) => console.log("DELETE PLAYER: Not implemented here.", playerId);
-const placeholderAddMatches = (matches: Match[]) => console.log("ADD MATCHES: Not implemented here.", matches);
-const placeholderSetPendingPlayers = (players: string[]) => console.log("SET PENDING PLAYERS: Not implemented here.", players);
-// ---
 
 // Define as abas disponíveis
 const TABS = {
@@ -26,15 +17,22 @@ const TABS = {
     HISTORY: 'Histórico de Jogos'
 };
 
+// --- DUMMY CRUD FUNCTIONS (Necessárias para props, se não exportadas pelo hook) ---
+const placeholderAddPlayer = (player: Omit<Player, 'id'>) => console.log("ADD PLAYER: Not implemented here.", player);
+const placeholderUpdatePlayer = (player: Player) => console.log("UPDATE PLAYER: Not implemented here.", player);
+const placeholderDeletePlayer = (playerId: string) => console.log("DELETE PLAYER: Not implemented here.", playerId);
+const placeholderAddMatches = (matches: Match[]) => console.log("ADD MATCHES: Not implemented here.", matches);
+// ---
 
 export default function MainAppContent() {
     const [user, setUser] = useState<User | null>(null);
     const [loading, setLoading] = useState(true);
     const [activeTab, setActiveTab] = useState(TABS.REGISTRY);
 
+    // 💡 TS6133 FIX: setPendingPlayers declared and used in PlayerManager props
     const [pendingPlayers, setPendingPlayers] = useState<string[]>([]);
     
-    // 💡 TS6133 FIX: 'matches' e 'players' são usados em useMemo
+    // Integração Firestore Data Hooks
     const { data: playersData, loading: playersLoading, error: playersError } = useFirestoreData<Player>('players');
     const { data: matchesData, loading: matchesLoading, error: matchesError } = useFirestoreData<Match>('matches');
 
@@ -57,10 +55,9 @@ export default function MainAppContent() {
         async function handleAuth() {
             try {
                 if (initialAuthToken && initialAuthToken.length > 0) {
-                    // FINAL FIX TS2345: Usando authInstance (garantido non-null)
+                    // RESOLVIDO TS2345: Usa authInstance (garantido non-null)
                     await signInWithCustomToken(authInstance, initialAuthToken); 
                 } else {
-                    // FINAL FIX TS2345: Usando authInstance (garantido non-null)
                     await signInAnonymously(authInstance); 
                 }
             } catch (error) {
@@ -84,6 +81,9 @@ export default function MainAppContent() {
         }
     };
 
+    // 💡 TS6133 FIX: userId is calculated and used in the JSX below.
+    const userId = user?.uid || 'Desconectado';
+    const displayEmail = user?.email || (user?.isAnonymous ? 'Anônimo' : 'Convidado'); 
 
     if (loading || isDataLoading) {
         return (
@@ -103,10 +103,6 @@ export default function MainAppContent() {
         );
     }
     
-    // 💡 TS6133 FIX: userId é usado no JSX, resolvendo o último TS6133
-    const userId = user?.uid || 'Desconectado'; 
-    const displayEmail = user?.email || (user?.isAnonymous ? 'Anônimo' : 'Convidado'); 
-
     return (
         <div className="p-4 bg-gray-50 min-h-screen">
             <div className="max-w-6xl mx-auto">
@@ -150,10 +146,11 @@ export default function MainAppContent() {
                 {/* --- RENDERIZAÇÃO CONDICIONAL --- */}
                 <div className="py-4">
                     {activeTab === TABS.MANAGER && (
+                        // 💡 TS2322 FIX: setPendingPlayers is the state setter.
                         <PlayerManager 
                             players={players}
                             pendingPlayers={pendingPlayers}
-                            setPendingPlayers={placeholderSetPendingPlayers}
+                            setPendingPlayers={setPendingPlayers} 
                             addPlayer={placeholderAddPlayer}
                             updatePlayer={placeholderUpdatePlayer}
                             deletePlayer={placeholderDeletePlayer}
