@@ -5,29 +5,11 @@ import AuthForm from './AuthForm';
 import { Player, Match } from '../types'; 
 import useFirestoreData from './useFirestoreData'; 
 
-import PlayerManager from './components/PlayerManager';
-import MatchRegistry from './components/MatchRegistry';
-import MatchHistory from './components/MatchHistory'; 
-
-const TABS = {
-    MANAGER: 'Gerenciar Jogadores',
-    REGISTRY: 'Registrar Partida',
-    HISTORY: 'Histórico de Jogos'
-};
-
-const placeholderAddPlayer = (player: Omit<Player, 'id'>) => console.log("ADD PLAYER: Not implemented here.", player);
-const placeholderUpdatePlayer = (player: Player) => console.log("UPDATE PLAYER: Not implemented here.", player);
-const placeholderDeletePlayer = (playerId: string) => console.log("DELETE PLAYER: Not implemented here.", playerId);
-const placeholderAddMatches = (matches: Match[]) => console.log("ADD MATCHES: Not implemented here.", matches);
-const placeholderSetPendingPlayers = (players: string[]) => console.log("SET PENDING PLAYERS: Not implemented here.", players);
 
 export default function MainAppContent() {
     const [user, setUser] = useState<User | null>(null);
     const [loading, setLoading] = useState(true);
-    const [activeTab, setActiveTab] = useState(TABS.REGISTRY);
 
-    const [pendingPlayers, setPendingPlayers] = useState<string[]>([]);
-    
     const { data: playersData, loading: playersLoading, error: playersError } = useFirestoreData<Player>('players');
     const { data: matchesData, loading: matchesLoading, error: matchesError } = useFirestoreData<Match>('matches');
 
@@ -40,7 +22,7 @@ export default function MainAppContent() {
     const appId = import.meta.env.VITE_APP_ID || 'default-app-id';
 
     useEffect(() => {
-        const authInstance = auth; 
+        const authInstance = auth; // Captura a instância (Auth | null)
 
         if (!authInstance) {
             setLoading(false);
@@ -49,11 +31,11 @@ export default function MainAppContent() {
 
         async function handleAuth() {
             try {
-                if (initialAuthToken && initialAuthToken.length > 0) {
-                    // FINAL FIX: Use non-null assertion (!) on authInstance
+                if (initialAuthToken) {
+                    // FINAL FIX: Use non-null assertion (!) on authInstance for strict Firebase functions
                     await signInWithCustomToken(authInstance!, initialAuthToken); 
                 } else {
-                    // FINAL FIX: Use non-null assertion (!) on authInstance
+                    // FINAL FIX: Use non-null assertion (!)
                     await signInAnonymously(authInstance!); 
                 }
             } catch (error) {
@@ -77,8 +59,6 @@ export default function MainAppContent() {
         }
     };
 
-    const userId = user?.uid || 'Desconectado';
-    const displayEmail = user?.email || (user?.isAnonymous ? 'Anônimo' : 'Convidado'); 
 
     if (loading || isDataLoading) {
         return (
@@ -98,10 +78,14 @@ export default function MainAppContent() {
         );
     }
     
+    const userId = user?.uid || 'Desconectado';
+    const displayEmail = user?.email || (user?.isAnonymous ? 'Anônimo' : 'Convidado'); 
+
     return (
         <div className="p-4 bg-gray-50 min-h-screen">
             <div className="max-w-6xl mx-auto">
             {user ? (
+              // CONTEÚDO PRINCIPAL (LOGADO)
               <div className="bg-white p-6 rounded-xl shadow-lg mt-4">
                 <div className="flex justify-between items-center mb-6 border-b pb-4">
                     <h1 className="text-2xl font-bold text-green-600">
@@ -120,49 +104,9 @@ export default function MainAppContent() {
                     </div>
                 </div>
 
-                <div className="flex border-b border-gray-200 mb-6">
-                    {Object.values(TABS).map(tab => (
-                        <button
-                            key={tab}
-                            onClick={() => setActiveTab(tab)}
-                            className={`px-4 py-2 text-sm font-medium transition-colors ${
-                                activeTab === tab
-                                    ? 'border-b-2 border-cyan-500 text-cyan-600'
-                                    : 'text-gray-500 hover:text-cyan-600'
-                            }`}
-                        >
-                            {tab}
-                        </button>
-                    ))}
-                </div>
-
-                <div className="py-4">
-                    {activeTab === TABS.MANAGER && (
-                        <PlayerManager 
-                            players={players}
-                            pendingPlayers={pendingPlayers}
-                            setPendingPlayers={setPendingPlayers}
-                            addPlayer={placeholderAddPlayer}
-                            updatePlayer={placeholderUpdatePlayer}
-                            deletePlayer={placeholderDeletePlayer}
-                        />
-                    )}
-
-                    {activeTab === TABS.REGISTRY && (
-                        <MatchRegistry
-                            players={players}
-                            matches={matches}
-                            addMatches={placeholderAddMatches}
-                        />
-                    )}
-
-                    {activeTab === TABS.HISTORY && (
-                        <MatchHistory
-                            matches={matches}
-                            players={players}
-                        />
-                    )}
-                </div>
+                <p className="text-gray-700">Dados de Jogadores Carregados: **{players.length}**</p>
+                <p className="text-gray-700">Dados de Partidas Carregadas: **{matches.length}**</p>
+                <p className="text-gray-700">ID do Usuário: **{userId}**</p>
 
               </div>
             ) : (
