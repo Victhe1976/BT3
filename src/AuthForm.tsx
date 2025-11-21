@@ -1,6 +1,11 @@
-import React, { useState } from "react";
+// src/AuthForm.tsx
+
+// BEFORE: import React, { useState } from "react";
+// AFTER: Import only the named exports used.
+import { useState } from "react"; 
 import { getAuth as getFirebaseAuth, GoogleAuthProvider, signInWithPopup } from "firebase/auth";
-// O getAuth() busca a instância do Firebase Auth inicializada em outro arquivo (ex: firebaseClient.ts).
+
+// The getAuth() retrieves the Firebase Auth instance initialized elsewhere.
 const auth = getFirebaseAuth();
 
 export default function AuthForm() {
@@ -13,11 +18,10 @@ export default function AuthForm() {
     const provider = new GoogleAuthProvider();
 
     try {
-      // Abre a janela de pop-up para login do Google
+      // Opens the Google sign-in popup window
       await signInWithPopup(auth, provider);
-      // O onAuthStateChanged no MainAppContent lidará com a atualização do usuário
     } catch (err: any) {
-      // Trata erros como pop-up bloqueado ou falha de rede
+      // Handles errors like pop-up blocked or network failure
       setError(err.message || "Erro ao tentar login com Google.");
     } finally {
       setLoading(false);
@@ -41,8 +45,6 @@ export default function AuthForm() {
         {loading ? "Conectando..." : "Entrar com Google"}
       </button>
 
-      {/* NOTA: Os botões de login/cadastro por e-mail foram removidos para focar no Google */}
-      
       <p className="text-center mt-4 text-sm text-gray-600">
         * Certifique-se de que o provedor Google está ativado no Firebase.
       </p>
