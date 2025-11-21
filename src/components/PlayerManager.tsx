@@ -1,3 +1,4 @@
+// src/components/PlayerManager.tsx
 import React, { useState, useRef } from 'react';
 import { Player } from '../../types';
 import { EditIcon, TrashIcon, UserPlusIcon, CameraIcon } from './Icons';
@@ -284,5 +285,4 @@ const PlayerManager: React.FC<PlayerManagerProps> = ({ players, pendingPlayers, 
   );
 };
 
-export default PlayerManager;
 export default PlayerManager;
