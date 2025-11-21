@@ -4,8 +4,6 @@ import { auth } from './firebase/firebaseClient';
 import AuthForm from './AuthForm'; 
 import { Player, Match } from '../types'; 
 import useFirestoreData from './useFirestoreData'; 
-
-// Importa os componentes (assumindo que o caminho é correto)
 import PlayerManager from './components/PlayerManager';
 import MatchRegistry from './components/MatchRegistry';
 import MatchHistory from './components/MatchHistory'; 
@@ -16,21 +14,18 @@ const TABS = {
     HISTORY: 'Histórico de Jogos'
 };
 
-// --- CRUD FUNCTIONS (TS6133 FIX: setPendingPlayers agora é o state setter) ---
 const placeholderAddPlayer = (player: Omit<Player, 'id'>) => console.log("ADD PLAYER: Not implemented here.", player);
 const placeholderUpdatePlayer = (player: Player) => console.log("UPDATE PLAYER: Not implemented here.", player);
 const placeholderDeletePlayer = (playerId: string) => console.log("DELETE PLAYER: Not implemented here.", playerId);
 const placeholderAddMatches = (matches: Match[]) => console.log("ADD MATCHES: Not implemented here.", matches);
-// placeholderSetPendingPlayers REMOVIDO
-// ---
+const placeholderSetPendingPlayers = (players: string[]) => console.log("SET PENDING PLAYERS: Not implemented here.", players);
 
 export default function MainAppContent() {
     const [user, setUser] = useState<User | null>(null);
     const [loading, setLoading] = useState(true);
     const [activeTab, setActiveTab] = useState(TABS.REGISTRY);
 
-    // 💡 TS6133 FIX: setPendingPlayers está sendo usado abaixo
-    const [pendingPlayers, setPendingPlayers] = useState<string[]>([]); 
+    const [pendingPlayers, setPendingPlayers] = useState<string[]>([]);
     
     const { data: playersData, loading: playersLoading, error: playersError } = useFirestoreData<Player>('players');
     const { data: matchesData, loading: matchesLoading, error: matchesError } = useFirestoreData<Match>('matches');
@@ -54,9 +49,11 @@ export default function MainAppContent() {
         async function handleAuth() {
             try {
                 if (initialAuthToken && initialAuthToken.length > 0) {
-                    await signInWithCustomToken(authInstance, initialAuthToken); 
+                    // CORREÇÃO DEFINITIVA: Asserção de não-nulidade (!)
+                    await signInWithCustomToken(authInstance!, initialAuthToken); 
                 } else {
-                    await signInAnonymously(authInstance); 
+                    // CORREÇÃO DEFINITIVA: Asserção de não-nulidade (!)
+                    await signInAnonymously(authInstance!); 
                 }
             } catch (error) {
                 console.error("Erro na autenticação inicial:", error);
@@ -79,8 +76,7 @@ export default function MainAppContent() {
         }
     };
 
-    // 💡 TS6133 FIX: userId é usado no JSX abaixo.
-    const userId = user?.uid || 'Desconectado'; 
+    const userId = user?.uid || 'Desconectado';
     const displayEmail = user?.email || (user?.isAnonymous ? 'Anônimo' : 'Convidado'); 
 
     if (loading || isDataLoading) {
@@ -109,7 +105,7 @@ export default function MainAppContent() {
               <div className="bg-white p-6 rounded-xl shadow-lg mt-4">
                 <div className="flex justify-between items-center mb-6 border-b pb-4">
                     <h1 className="text-2xl font-bold text-green-600">
-                      BT dos Parça - Admin
+                      Painel Principal
                     </h1>
                     <div className="flex items-center gap-4">
                         <span className="text-sm text-gray-600 hidden sm:inline">
@@ -147,7 +143,7 @@ export default function MainAppContent() {
                         <PlayerManager 
                             players={players}
                             pendingPlayers={pendingPlayers}
-                            setPendingPlayers={setPendingPlayers} // USADO
+                            setPendingPlayers={setPendingPlayers}
                             addPlayer={placeholderAddPlayer}
                             updatePlayer={placeholderUpdatePlayer}
                             deletePlayer={placeholderDeletePlayer}
@@ -169,9 +165,6 @@ export default function MainAppContent() {
                         />
                     )}
                 </div>
-
-                {/* 💡 TS6133 FIX: userId usado no JSX para resolver o warning */}
-                <p className="mt-4 text-xs text-gray-400">User ID: {userId}</p>
 
               </div>
             ) : (
