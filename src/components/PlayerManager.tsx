@@ -2,12 +2,11 @@ import React, { useState, useRef } from 'react';
 import { Player } from '../../types';
 import { EditIcon, TrashIcon, UserPlusIcon, CameraIcon } from './Icons';
 import { storage } from '../firebase/firebaseClient'; 
-import { ref, uploadBytes, getDownloadURL, FirebaseStorage } from 'firebase/storage'; 
+import { ref, uploadBytes, getDownloadURL } from 'firebase/storage'; 
 
 interface PlayerManagerProps {
   players: Player[];
   pendingPlayers: string[];
-  // 💡 CORREÇÃO: Adicionamos o setPendingPlayers para resolver o TS2322
   setPendingPlayers: React.Dispatch<React.SetStateAction<string[]>>; 
   addPlayer: (player: Omit<Player, 'id'>) => void;
   updatePlayer: (player: Player) => void;
@@ -130,7 +129,6 @@ const PlayerManager: React.FC<PlayerManagerProps> = ({ players, pendingPlayers, 
       }
 
       closeModal();
-      // Limpa a lista de pendentes após a adição bem-sucedida
       if (pendingPlayers.length > 0) {
         setPendingPlayers(prev => prev.filter(p => p.toLowerCase() !== name.toLowerCase()));
       }
@@ -286,4 +284,5 @@ const PlayerManager: React.FC<PlayerManagerProps> = ({ players, pendingPlayers, 
   );
 };
 
+export default PlayerManager;
 export default PlayerManager;
