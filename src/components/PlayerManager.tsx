@@ -1,13 +1,14 @@
 import React, { useState, useRef } from 'react';
 import { Player } from '../../types';
 import { EditIcon, TrashIcon, UserPlusIcon, CameraIcon } from './Icons';
-// Importação corrigida para usar o módulo centralizado
 import { storage } from '../firebase/firebaseClient'; 
-import { ref, uploadBytes, getDownloadURL } from 'firebase/storage'; 
+import { ref, uploadBytes, getDownloadURL, FirebaseStorage } from 'firebase/storage'; 
 
 interface PlayerManagerProps {
   players: Player[];
   pendingPlayers: string[];
+  // 💡 CORREÇÃO: Adicionamos o setPendingPlayers para resolver o TS2322
+  setPendingPlayers: React.Dispatch<React.SetStateAction<string[]>>; 
   addPlayer: (player: Omit<Player, 'id'>) => void;
   updatePlayer: (player: Player) => void;
   deletePlayer: (playerId: string) => void;
@@ -29,7 +30,7 @@ const calculateAge = (dob: string): number => {
   }
 };
 
-const PlayerManager: React.FC<PlayerManagerProps> = ({ players, pendingPlayers, addPlayer, updatePlayer, deletePlayer }) => {
+const PlayerManager: React.FC<PlayerManagerProps> = ({ players, pendingPlayers, setPendingPlayers, addPlayer, updatePlayer, deletePlayer }) => {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editingPlayer, setEditingPlayer] = useState<Player | null>(null);
   const [name, setName] = useState('');
@@ -79,13 +80,11 @@ const PlayerManager: React.FC<PlayerManagerProps> = ({ players, pendingPlayers, 
   };
 
   const uploadAvatarAndGetURL = async (file: File, playerName: string): Promise<string> => {
-    // Verifica se storage existe antes de usar 'ref'
     if (!storage || !file) return ''; 
 
     const fileExtension = file.name.split('.').pop();
     const fileName = `${playerName.replace(/\s/g, '_')}_${Date.now()}.${fileExtension}`;
     
-    // Usa a instância 'storage' importada
     const imageRef = ref(storage, `avatares/${fileName}`); 
 
     await uploadBytes(imageRef, file);
@@ -131,6 +130,10 @@ const PlayerManager: React.FC<PlayerManagerProps> = ({ players, pendingPlayers, 
       }
 
       closeModal();
+      // Limpa a lista de pendentes após a adição bem-sucedida
+      if (pendingPlayers.length > 0) {
+        setPendingPlayers(prev => prev.filter(p => p.toLowerCase() !== name.toLowerCase()));
+      }
     } catch (error) {
       console.error("Erro ao salvar jogador e/ou avatar:", error);
     } finally {
